@@ -972,7 +972,7 @@ GameObject:
   - component: {fileID: 1199907667}
   - component: {fileID: 1199907668}
   m_Layer: 0
-  m_Name: Rivet API
+  m_Name: Rivet Manager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1005,7 +1005,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3781f297e673b0940943fedd28d18ef2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rivetToken: dev_staging.eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.CNf63tWVMhDXopqYoDEaEgoQ7tfsA-QZSU6u97JMZ-zTdCIvQi0KEgoQmfId86_FTHuxaP1VTZQ1rhoJMTI3LjAuMC4xIgwKB2RlZmF1bHQQ4Tw.hsHzAtAVLpOWm4BQ4Pmtt9aejMdudL2KWd9Cq66_TbPCF5Mb979Y7mnlPJ37Ssh4oJT7PUkwA0tkDYXiTDv8DQ
+  rivetToken: pub_prod.eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.CJPw09eVMhCTmI-aoDEaEgoQMU4leiNVTxuX3Yc7R7oqUSIWGhQKEgoQm5BjKYFuQVukJmhAP7gWdw.fi9ighpDJ5vke3J0v3i4xYgfOosgzbt4fXTtc2J-vN6Y9GdvRD-C5dOzQC0XSme6nFM3Uc27J5kYxp40DwSjCw
 --- !u!1 &1998836875
 GameObject:
   m_ObjectHideFlags: 0

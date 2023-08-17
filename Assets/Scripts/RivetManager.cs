@@ -63,7 +63,7 @@ public class RivetManager : MonoBehaviour
         _networkManager = FindObjectOfType<NetworkManager>();
 
         // Start server if testing in editor or running from CLI
-        if (Application.isEditor || Application.isBatchMode)
+        if ((Application.isEditor && GetToken().StartsWith("dev_")) || Application.isBatchMode)
         {
             StartServer();
         }
@@ -168,7 +168,7 @@ public class RivetManager : MonoBehaviour
 
     #region Requests
 
-    private string? GetToken()
+    private string GetToken()
     {
         var token = Environment.GetEnvironmentVariable("RIVET_TOKEN");
         if (token != null)
