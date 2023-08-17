@@ -44,7 +44,7 @@ public class RivetManager : MonoBehaviour
     public const ushort ServerPort = 8080;
 
     public string? rivetToken = null;
-
+    
     #region References
 
     private NetworkManager _networkManager = null!;

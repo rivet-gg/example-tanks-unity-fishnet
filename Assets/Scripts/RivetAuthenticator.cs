@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using FishNet.Authenticating;
 using FishNet.Broadcast;
 using FishNet.Connection;
@@ -28,26 +29,45 @@ public class RivetAuthenticator : Authenticator
     private RivetManager _rivetManager;
 
     #endregion
-    
+
+    #region State
+
+    /// <summary>
+    /// Tokens for each client. Used to tell Rivet which clients are disconnected on the server.
+    /// </summary>
+    private Dictionary<int, string> _clientTokens = new Dictionary<int, string>();
+
+    #endregion
+
     void Start()
     {
         _rivetManager = FindObjectOfType<RivetManager>();
     }
 
     #region Authentication
+
     public override event Action<NetworkConnection, bool> OnAuthenticationResult;
-    
+
     public override void InitializeOnce(NetworkManager networkManager)
     {
         base.InitializeOnce(networkManager);
 
         base.NetworkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
-        base.NetworkManager.ServerManager.RegisterBroadcast<TokenRequestBroadcast>(OnTokenRequestBroadcast, false);
         base.NetworkManager.ClientManager.RegisterBroadcast<TokenResponseBroadcast>(OnTokenResponseBroadcast);
+
+        base.NetworkManager.ServerManager.RegisterBroadcast<TokenRequestBroadcast>(OnTokenRequestBroadcast, false);
+        base.NetworkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
     }
 
     private void SendAuthenticationResponse(NetworkConnection conn, bool isValid)
     {
+        // Remove token if invalid
+        if (!isValid)
+        {
+            _clientTokens.Remove(conn.ClientId);
+        }
+
+        // Send response
         var trb = new TokenResponseBroadcast()
         {
             Valid = isValid,
@@ -55,6 +75,7 @@ public class RivetAuthenticator : Authenticator
         base.NetworkManager.ServerManager.Broadcast(conn, trb, false);
         OnAuthenticationResult?.Invoke(conn, isValid);
     }
+
     #endregion
 
 
@@ -75,6 +96,32 @@ public class RivetAuthenticator : Authenticator
         base.NetworkManager.ClientManager.Broadcast(pb);
     }
 
+    private void ServerManager_OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs state)
+    {
+        if (state.ConnectionState == RemoteConnectionState.Stopped)
+        {
+            // Notify Rivet of player disconnect
+            if (_clientTokens.ContainsKey(conn.ClientId))
+            {
+                // Remove token
+                var token = _clientTokens[conn.ClientId];
+                _clientTokens.Remove(conn.ClientId);
+
+                // Send player disconnect
+                Debug.Log("Disconnecting player: " + token);
+                StartCoroutine(_rivetManager.PlayerDisconnected(
+                    token,
+                    () => { },
+                    (_) => { }
+                ));
+            }
+            else
+            {
+                Debug.LogWarning("Client disconnected without token: " + conn.ClientId);
+            }
+        }
+    }
+
     private void OnTokenRequestBroadcast(NetworkConnection conn, TokenRequestBroadcast trb)
     {
         // Client already authenticated, potentially an attack
@@ -84,7 +131,10 @@ public class RivetAuthenticator : Authenticator
             conn.Disconnect(true);
             return;
         }
-        
+
+        // Save token
+        _clientTokens[conn.ClientId] = trb.Token;
+
         // Check validity
         Debug.Log("Validating token: " + trb.Token);
         StartCoroutine(_rivetManager.PlayerConnected(
