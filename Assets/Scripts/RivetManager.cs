@@ -41,7 +41,7 @@ public struct RivetPlayer
 
 public class RivetManager : MonoBehaviour
 {
-    public const ushort ServerPort = 8080;
+    public const ushort ServerPort = 7777;
 
     public string? rivetToken = null;
     
