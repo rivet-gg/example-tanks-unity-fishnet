@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using FishNet.Managing.Logging;
 using UnityEngine;
 using FishNet.Object;
 
@@ -18,7 +19,7 @@ public class Player : NetworkBehaviour
         Move();
     }
 
-    [Client(RequireOwnership = true)]
+    [Client(Logging = LoggingType.Off, RequireOwnership = true)]
     void Move() {
         var horizontalInput = Input.GetAxisRaw("Horizontal");
         var verticalInput = Input.GetAxisRaw("Vertical");
