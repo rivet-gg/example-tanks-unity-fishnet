@@ -42,12 +42,14 @@ public struct RivetPlayer
 public class RivetManager : MonoBehaviour
 {
     public const ushort ServerPort = 8080;
-        
+
     public string? rivetToken = null;
-    
+
     #region References
+
     private NetworkManager _networkManager = null!;
     private RivetAuthenticator _authenticator = null!;
+
     #endregion
 
     /// <summary>
@@ -59,13 +61,26 @@ public class RivetManager : MonoBehaviour
     private void Start()
     {
         _networkManager = FindObjectOfType<NetworkManager>();
+
+        // Start server if testing in editor or running from CLI
+        if (Application.isEditor || Application.isBatchMode)
+        {
+            StartServer();
+        }
+    }
+
+    private void StartServer()
+    {
+        Debug.Log("Starting server");
         
-        _authenticator = gameObject.AddComponent<RivetAuthenticator>();
-        
-        // TODO: Only do if server
         // Start server
         _networkManager.ServerManager.StartConnection(ServerPort);
+
+        // Create authentication
+        _authenticator = gameObject.AddComponent<RivetAuthenticator>();
         _networkManager.ServerManager.SetAuthenticator(_authenticator);
+
+        // Notify Rivet this server can start accepting players
         StartCoroutine(LobbyReady(() => { Debug.Log("Lobby ready"); }, _ => { }));
     }
 
@@ -82,18 +97,19 @@ public class RivetManager : MonoBehaviour
     public IEnumerator FindLobby(FindLobbyRequest request, Action<FindLobbyResponse> success,
         Action<string> fail)
     {
-        yield return PostRequest<FindLobbyRequest, FindLobbyResponse>("https://matchmaker.api.rivet.gg/v1/lobbies/find", request, res =>
-        {
-            // Save response
-            FindLobbyResponse = res;
-            
-            // Connect to server
-            // TODO: Don't auto-boot server
-            var port = res.Ports["default"];
-            _networkManager.ClientManager.StartConnection(port.Hostname, port.Port);
-        
-            success(res);
-        }, fail);
+        yield return PostRequest<FindLobbyRequest, FindLobbyResponse>("https://matchmaker.api.rivet.gg/v1/lobbies/find",
+            request, res =>
+            {
+                // Save response
+                FindLobbyResponse = res;
+
+                // Connect to server
+                // TODO: Don't auto-boot server
+                var port = res.Ports["default"];
+                _networkManager.ClientManager.StartConnection(port.Hostname, port.Port);
+
+                success(res);
+            }, fail);
     }
 
     /// <summary>
