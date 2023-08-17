@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using FishNet.Managing;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
@@ -38,13 +39,33 @@ public struct RivetPlayer
     [JsonProperty("token")] public string Token { get; set; }
 }
 
-public class RivetAPI : MonoBehaviour
+public class RivetManager : MonoBehaviour
 {
+    public const ushort ServerPort = 8080;
+        
     public string? rivetToken = null;
+    
+    #region References
+    private NetworkManager _networkManager = null!;
+    private RivetAuthenticator _authenticator = null!;
+    #endregion
+
+    /// <summary>
+    /// The response from the last <see cref="FindLobby"/> call. Used to maintain information about the Rivet player &
+    /// lobby.
+    /// </summary>
+    public FindLobbyResponse? FindLobbyResponse { get; private set; }
 
     private void Start()
     {
+        _networkManager = FindObjectOfType<NetworkManager>();
+        
+        _authenticator = gameObject.AddComponent<RivetAuthenticator>();
+        
         // TODO: Only do if server
+        // Start server
+        _networkManager.ServerManager.StartConnection(ServerPort);
+        _networkManager.ServerManager.SetAuthenticator(_authenticator);
         StartCoroutine(LobbyReady(() => { Debug.Log("Lobby ready"); }, _ => { }));
     }
 
@@ -61,7 +82,18 @@ public class RivetAPI : MonoBehaviour
     public IEnumerator FindLobby(FindLobbyRequest request, Action<FindLobbyResponse> success,
         Action<string> fail)
     {
-        yield return PostRequest("https://matchmaker.api.rivet.gg/v1/lobbies/find", request, success, fail);
+        yield return PostRequest<FindLobbyRequest, FindLobbyResponse>("https://matchmaker.api.rivet.gg/v1/lobbies/find", request, res =>
+        {
+            // Save response
+            FindLobbyResponse = res;
+            
+            // Connect to server
+            // TODO: Don't auto-boot server
+            var port = res.Ports["default"];
+            _networkManager.ClientManager.StartConnection(port.Hostname, port.Port);
+        
+            success(res);
+        }, fail);
     }
 
     /// <summary>
