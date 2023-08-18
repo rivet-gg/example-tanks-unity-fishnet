@@ -1701,6 +1701,7 @@ GameObject:
   - component: {fileID: 7606867013933297179}
   - component: {fileID: 1071093432954949437}
   - component: {fileID: 7606867013933297173}
+  - component: {fileID: 7606867013933297180}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -1727,6 +1728,31 @@ MonoBehaviour:
   _persistence: 0
   _logging: {fileID: 0}
   _spawnablePrefabs: {fileID: 11400000, guid: f0d83feb628a31a4bb9eb3495262f418, type: 2}
+--- !u!114 &7606867013933297180
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7606867013933297178}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68828c85278210948b9d50a8db3aab74, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _authenticator: {fileID: 0}
+  _remoteClientTimeout: 0
+  _remoteClientTimeoutDuration: 60
+  _syncTypeRate: 0.1
+  SpawnPacking:
+    Position: 0
+    Rotation: 2
+    Scale: 2
+  _changeFrameRate: 1
+  _frameRate: 500
+  _shareIds: 1
+  _startOnHeadless: 0
+  _limitClientMTU: 1
 --- !u!224 &7691298405446739072
 RectTransform:
   m_ObjectHideFlags: 0

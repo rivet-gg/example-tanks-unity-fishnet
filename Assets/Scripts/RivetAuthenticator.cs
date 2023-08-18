@@ -52,9 +52,6 @@ public class RivetAuthenticator : Authenticator
     {
         base.InitializeOnce(networkManager);
 
-        base.NetworkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
-        base.NetworkManager.ClientManager.RegisterBroadcast<TokenResponseBroadcast>(OnTokenResponseBroadcast);
-
         base.NetworkManager.ServerManager.RegisterBroadcast<TokenRequestBroadcast>(OnTokenRequestBroadcast, false);
         base.NetworkManager.ServerManager.OnRemoteConnectionState += ServerManager_OnRemoteConnectionState;
     }
@@ -80,21 +77,6 @@ public class RivetAuthenticator : Authenticator
 
 
     #region Connection events
-
-    private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs args)
-    {
-        if (args.ConnectionState != LocalConnectionState.Started)
-            return;
-
-        // Send request
-        var token = _rivetManager.FindLobbyResponse?.Player.Token;
-        Debug.Log("Sending authenticate token request: " + token);
-        var pb = new TokenRequestBroadcast()
-        {
-            Token = token
-        };
-        base.NetworkManager.ClientManager.Broadcast(pb);
-    }
 
     private void ServerManager_OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs state)
     {
@@ -142,13 +124,6 @@ public class RivetAuthenticator : Authenticator
             () => { SendAuthenticationResponse(conn, true); },
             (_) => { SendAuthenticationResponse(conn, false); }
         ));
-    }
-
-    private void OnTokenResponseBroadcast(TokenResponseBroadcast trb)
-    {
-        Debug.Log("Token response: " + trb.Valid);
-        string result = (trb.Valid) ? "Token authenticated." : "Token authentication failed.";
-        NetworkManager.Log(result);
     }
 
     #endregion

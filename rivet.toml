@@ -44,7 +44,8 @@
 	# with different protocols.
 	#
 	# How ports work: https://rivet.gg/docs/serverless-lobbies/concepts/ports
-	ports.default = { port = 7777, protocol = "udp" }
+	ports.default = { port = 7770, protocol = "udp" }
+	
 # # How Rivet CDN should host your static assets on our CDN.
 # #
 # # https://rivet.gg/docs/cdn

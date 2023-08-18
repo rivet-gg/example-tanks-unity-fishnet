@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using FishNet.Managing;
+using FishNet.Transporting;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
@@ -41,8 +42,6 @@ public struct RivetPlayer
 
 public class RivetManager : MonoBehaviour
 {
-    public const ushort ServerPort = 7777;
-
     public string? rivetToken = null;
     
     #region References
@@ -61,6 +60,10 @@ public class RivetManager : MonoBehaviour
     private void Start()
     {
         _networkManager = FindObjectOfType<NetworkManager>();
+        
+        // Configure client authentication
+        _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
+        _networkManager.ClientManager.RegisterBroadcast<RivetAuthenticator.TokenResponseBroadcast>(OnTokenResponseBroadcast);
 
         // Start server if testing in editor or running from CLI
         if ((Application.isEditor && GetToken().StartsWith("dev_")) || Application.isBatchMode)
@@ -69,12 +72,21 @@ public class RivetManager : MonoBehaviour
         }
     }
 
+
+    #region Server
+    
     private void StartServer()
     {
-        Debug.Log("Starting server");
+        Debug.Log("Starting server on port " + GetServerPort());
         
         // Start server
-        _networkManager.ServerManager.StartConnection(ServerPort);
+        _networkManager.TransportManager.Transport.SetServerBindAddress("0.0.0.0", IPAddressType.IPv4);
+        _networkManager.TransportManager.Transport.SetPort(GetServerPort());
+        _networkManager.ServerManager.StartConnection();
+        _networkManager.ServerManager.OnRemoteConnectionState += (conn, args) =>
+        {
+            Debug.Log("Remote connection state: " + conn.ClientId + " " + conn.GetAddress() + " " + args.ConnectionState);
+        };
 
         // Create authentication
         _authenticator = gameObject.AddComponent<RivetAuthenticator>();
@@ -83,8 +95,42 @@ public class RivetManager : MonoBehaviour
         // Notify Rivet this server can start accepting players
         StartCoroutine(LobbyReady(() => { Debug.Log("Lobby ready"); }, _ => { }));
     }
+    
+    private ushort GetServerPort()
+    {
+        var port = Environment.GetEnvironmentVariable("PORT_default");
+        return port != null ? ushort.Parse(port) : (ushort) 7770;
+    }
+    
+    #endregion
+    
+    #region Authentication
 
-    #region Lobby
+    private void ClientManager_OnClientConnectionState(ClientConnectionStateArgs args)
+    {
+        if (args.ConnectionState != LocalConnectionState.Started)
+            return;
+
+        // Send request
+        var token = FindLobbyResponse?.Player.Token;
+        Debug.Log("Sending authenticate token request: " + token);
+        var pb = new RivetAuthenticator.TokenRequestBroadcast()
+        {
+            Token = token
+        };
+        _networkManager.ClientManager.Broadcast(pb);
+    }
+    
+    private void OnTokenResponseBroadcast(RivetAuthenticator.TokenResponseBroadcast trb)
+    {
+        Debug.Log("Token response: " + trb.Valid);
+        string result = (trb.Valid) ? "Token authenticated." : "Token authentication failed.";
+        _networkManager.Log(result);
+    }
+    
+    #endregion
+
+    #region API: Matchmaker.Lobbies
 
     /// <summary>
     /// <a href="https://rivet.gg/docs/matchmaker/api/lobbies/find">Documentation</a>
@@ -106,6 +152,7 @@ public class RivetManager : MonoBehaviour
                 // Connect to server
                 // TODO: Don't auto-boot server
                 var port = res.Ports["default"];
+                Debug.Log("Connecting to " + port.Hostname + ":" + port.Port);
                 _networkManager.ClientManager.StartConnection(port.Hostname, port.Port);
 
                 success(res);
@@ -127,7 +174,7 @@ public class RivetManager : MonoBehaviour
 
     #endregion
 
-    #region Player
+    #region API: Matchmaker.Players
 
     /// <summary>
     /// <a href="https://rivet.gg/docs/matchmaker/api/players/connected">Documentation</a>
@@ -166,7 +213,7 @@ public class RivetManager : MonoBehaviour
 
     #endregion
 
-    #region Requests
+    #region API Requests
 
     private string GetToken()
     {
