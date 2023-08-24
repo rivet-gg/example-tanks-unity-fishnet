@@ -1,8 +1,10 @@
 using FishNet.Managing;
 using FishNet.Transporting;
+using Newtonsoft.Json.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.UI;
 
 public class RivetUI : MonoBehaviour
 {
@@ -11,6 +13,8 @@ public class RivetUI : MonoBehaviour
 
     public GameObject joinMenuPanel;
     public TMP_Text connectionInfoText;
+    public TMP_InputField lobbyIdInputField;
+    public Slider gravitySlider;
 
     private LocalConnectionState? _connectionState;
 
@@ -48,6 +52,39 @@ public class RivetUI : MonoBehaviour
             GameModes = new[] { "default" },
         }, _ => UpdateConnectionInfo(), fail => { Debug.Log($"Failed to find lobby: {fail}"); }));
     }
+    
+    public void OnClick_Join()
+    {
+        // Hide menu
+        joinMenuPanel.SetActive(false);
+
+        // Find lobby
+        StartCoroutine(_rivetManager.JoinLobby(new JoinLobbyRequest
+        {
+            LobbyId = lobbyIdInputField.text,
+        }, _ => UpdateConnectionInfo(), fail => { Debug.Log($"Failed to join lobby: {fail}"); }));
+    }
+    
+    public void OnClick_Create()
+    {
+        // Hide menu
+        joinMenuPanel.SetActive(false);
+
+        // Find lobby
+        StartCoroutine(_rivetManager.CreateLobby(new CreateLobbyRequest
+        {
+            GameMode = "custom",
+            LobbyConfig = new JObject
+            {
+                { "gravity", gravitySlider.value }
+            },
+        }, _ => UpdateConnectionInfo(), fail => { Debug.Log($"Failed to create lobby: {fail}"); }));
+    }
+    
+    public void OnClick_CopyLobbyId()
+    {
+        GUIUtility.systemCopyBuffer = _rivetManager.FindLobbyResponse?.Lobby.LobbyId ?? "";
+    }
 
     #endregion
 
@@ -82,6 +119,7 @@ public class RivetUI : MonoBehaviour
             $"Lobby ID: {(flr.HasValue ? flr.Value.Lobby.LobbyId : "?")}\n" +
             $"Host: {(flr.HasValue ? flr.Value.Ports["default"].Hostname : "?")}\n" +
             $"Port: {(flr.HasValue ? flr.Value.Ports["default"].Port : "?")}\n" +
+            $"Lobby config: {_rivetManager.lobbyConfigRaw ?? "?"}\n" +
             $"Connection state: {connectionState}\n";
     }
 

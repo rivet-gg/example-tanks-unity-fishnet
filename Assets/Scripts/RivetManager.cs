@@ -2,16 +2,43 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using FishNet.Managing;
+using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
+using UnityEngine.Serialization;
+
+[JsonConverter(typeof(StringEnumConverter))]
+public enum CreateLobbyRequestPublicity
+{
+    [EnumMember(Value = "public")] Public,
+    [EnumMember(Value = "private")] Private,
+}
 
 public struct FindLobbyRequest
 {
     [JsonProperty("game_modes")] public string[] GameModes { get; set; }
     [JsonProperty("regions")] public string[]? Regions { get; set; }
+}
+
+
+public struct JoinLobbyRequest
+{
+    [JsonProperty("lobby_id")] public string LobbyId { get; set; }
+}
+
+public struct CreateLobbyRequest
+{
+    [JsonProperty("game_mode")] public string GameMode { get; set; }
+    [JsonProperty("region")] public string? Region { get; set; }
+    [JsonProperty("publicity")] public CreateLobbyRequestPublicity? Publicity { get; set; }
+    [JsonProperty("lobby_config")] public JObject? LobbyConfig { get; set; }
 }
 
 public struct FindLobbyResponse
@@ -43,6 +70,19 @@ public struct RivetPlayer
 public class RivetManager : MonoBehaviour
 {
     public string? rivetToken = null;
+    
+    
+    /// <summary>
+    /// The lobby config provided for a custom lobby.
+    /// </summary>
+    [HideInInspector] public string? lobbyConfigRaw = null;
+    
+    // Parse LobbyConfigRaw to JObject
+    public JObject? LobbyConfig
+    {
+        get => lobbyConfigRaw != null ? JObject.Parse(lobbyConfigRaw) : null;
+        set => lobbyConfigRaw = value?.ToString();
+    }
     
     #region References
 
@@ -78,6 +118,9 @@ public class RivetManager : MonoBehaviour
     private void StartServer()
     {
         Debug.Log("Starting server on port " + GetServerPort());
+        
+        // Read RIVET_LOBBY_CONFIG JSON to LobbyConfig
+        lobbyConfigRaw = Environment.GetEnvironmentVariable("RIVET_LOBBY_CONFIG");
         
         // Start server
         _networkManager.TransportManager.Transport.SetServerBindAddress("0.0.0.0", IPAddressType.IPv4);
@@ -150,7 +193,58 @@ public class RivetManager : MonoBehaviour
                 FindLobbyResponse = res;
 
                 // Connect to server
-                // TODO: Don't auto-boot server
+                var port = res.Ports["default"];
+                Debug.Log("Connecting to " + port.Hostname + ":" + port.Port);
+                _networkManager.ClientManager.StartConnection(port.Hostname, port.Port);
+
+                success(res);
+            }, fail);
+    }
+    
+    /// <summary>
+    /// <a href="https://rivet.gg/docs/matchmaker/api/lobbies/join">Documentation</a>
+    /// </summary>
+    /// 
+    /// <param name="request"></param>
+    /// <param name="success"></param>
+    /// <param name="fail"></param>
+    /// <returns></returns>
+    public IEnumerator JoinLobby(JoinLobbyRequest request, Action<FindLobbyResponse> success,
+        Action<string> fail)
+    {
+        yield return PostRequest<JoinLobbyRequest, FindLobbyResponse>("https://matchmaker.api.rivet.gg/v1/lobbies/join",
+            request, res =>
+            {
+                // Save response
+                FindLobbyResponse = res;
+
+                // Connect to server
+                var port = res.Ports["default"];
+                Debug.Log("Connecting to " + port.Hostname + ":" + port.Port);
+                _networkManager.ClientManager.StartConnection(port.Hostname, port.Port);
+
+                success(res);
+            }, fail);
+    }
+    
+    /// <summary>
+    /// <a href="https://rivet.gg/docs/matchmaker/api/lobbies/create">Documentation</a>
+    /// </summary>
+    /// 
+    /// <param name="request"></param>
+    /// <param name="success"></param>
+    /// <param name="fail"></param>
+    /// <returns></returns>
+    public IEnumerator CreateLobby(CreateLobbyRequest request, Action<FindLobbyResponse> success,
+        Action<string> fail)
+    {
+        yield return PostRequest<CreateLobbyRequest, FindLobbyResponse>("https://matchmaker.api.rivet.gg/v1/lobbies/create",
+            request, res =>
+            {
+                // Save response
+                FindLobbyResponse = res;
+
+                // Connect to server
                 var port = res.Ports["default"];
                 Debug.Log("Connecting to " + port.Hostname + ":" + port.Port);
                 _networkManager.ClientManager.StartConnection(port.Hostname, port.Port);
@@ -233,8 +327,10 @@ public class RivetManager : MonoBehaviour
 
     private IEnumerator PostRequest<TReq, TRes>(string url, TReq requestBody, Action<TRes> success, Action<string> fail)
     {
+        var debugRequestDescription = "POST " + url;
+        
         var requestBodyStr = JsonConvert.SerializeObject(requestBody);
-        Debug.Log("POST " + url + " " + requestBodyStr);
+        Debug.Log(debugRequestDescription + " Request: " + requestBodyStr + "\n" + Environment.StackTrace);
 
         var www = UnityWebRequest.Post(url, requestBodyStr, "application/json");
         www.SetRequestHeader("Authorization", "Bearer " + GetToken());
@@ -249,31 +345,31 @@ public class RivetManager : MonoBehaviour
             case UnityWebRequest.Result.Success:
                 if (www.responseCode == 200)
                 {
-                    Debug.Log("Success: " + www.downloadHandler.text);
+                    Debug.Log(debugRequestDescription + " Success: " + www.downloadHandler.text);
                     var responseBody = JsonConvert.DeserializeObject<TRes>(www.downloadHandler.text);
                     success(responseBody!);
                 }
                 else
                 {
                     string statusError = "Error status " + www.responseCode + ": " + www.downloadHandler.text;
-                    Debug.LogError(statusError);
+                    Debug.LogError(debugRequestDescription + " " + statusError);
                     fail(statusError);
                 }
 
                 break;
             case UnityWebRequest.Result.ConnectionError:
                 string connectionError = "ConnectionError: " + www.error;
-                Debug.LogError(connectionError);
+                Debug.LogError(debugRequestDescription + " " + connectionError + "\n" + Environment.StackTrace);
                 fail(connectionError);
                 break;
             case UnityWebRequest.Result.ProtocolError:
                 string protocolError = "ProtocolError: " + www.error + " " + www.downloadHandler.text;
-                Debug.LogError(protocolError);
+                Debug.LogError(debugRequestDescription + " " + protocolError + "\n" + Environment.StackTrace);
                 fail(protocolError);
                 break;
             case UnityWebRequest.Result.DataProcessingError:
                 string dpe = "DataProcessingError: " + www.error;
-                Debug.LogError(dpe);
+                Debug.LogError(debugRequestDescription + " " + dpe + "\n" + Environment.StackTrace);
                 fail(dpe);
                 break;
             default:
