@@ -11,12 +11,12 @@ public class RivetUI : MonoBehaviour
 {
     private NetworkManager _networkManager = null!;
     private RivetManager _rivetManager = null!;
-    public LobbyConfig? lobbyConfig;
+    [HideInInspector] public LobbyConfig? lobbyConfig;  // Assigned on LobbyConfig.OnNetworkStart
 
     public GameObject joinMenuPanel = null!;
     public TMP_Text connectionInfoText = null!;
     public TMP_InputField lobbyIdInputField = null!;
-    public Slider gravitySlider = null!;
+    public Slider moveSpeedSlider = null!;
 
     private LocalConnectionState? _connectionState;
 
@@ -80,7 +80,7 @@ public class RivetUI : MonoBehaviour
             GameMode = "custom",
             LobbyConfig = new JObject
             {
-                { "gravity", gravitySlider.value }
+                { "move_speed", moveSpeedSlider.value }
             },
         }, _ => UpdateConnectionInfo(), fail => { Debug.Log($"Failed to create lobby: {fail}"); }));
     }

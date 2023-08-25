@@ -10,6 +10,7 @@ using UnityEngine.Networking;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using UnityEngine.Serialization;
 
 [JsonConverter(typeof(StringEnumConverter))]
 public enum CreateLobbyRequestPublicity
@@ -18,55 +19,49 @@ public enum CreateLobbyRequestPublicity
     [EnumMember(Value = "private")] Private,
 }
 
-[Serializable]
 public struct FindLobbyRequest
 {
-    [JsonProperty("game_modes")] public string[] GameModes { get; set; }
-    [JsonProperty("regions")] public string[]? Regions { get; set; }
+    [JsonProperty("game_modes")] public string[] GameModes;
+    [JsonProperty("regions")] public string[]? Regions;
 }
 
-[Serializable]
 public struct JoinLobbyRequest
 {
-    [JsonProperty("lobby_id")] public string LobbyId { get; set; }
+    [JsonProperty("lobby_id")] public string LobbyId;
 }
 
-[Serializable]
 public struct CreateLobbyRequest
 {
-    [JsonProperty("game_mode")] public string GameMode { get; set; }
-    [JsonProperty("region")] public string? Region { get; set; }
-    [JsonProperty("publicity")] public CreateLobbyRequestPublicity? Publicity { get; set; }
-    [JsonProperty("lobby_config")] public JObject? LobbyConfig { get; set; }
+    [JsonProperty("game_mode")] public string GameMode;
+    [JsonProperty("region")] public string? Region;
+    [JsonProperty("publicity")] public CreateLobbyRequestPublicity Publicity;
+    [JsonProperty("lobby_config")] public JObject? LobbyConfig;
 }
 
-[Serializable]
 public struct FindLobbyResponse
 {
-    [JsonProperty("lobby")] public RivetLobby Lobby { get; set; }
-    [JsonProperty("ports")] public Dictionary<string, RivetLobbyPort> Ports { get; set; }
-    [JsonProperty("player")] public RivetPlayer Player { get; set; }
+    [JsonProperty("lobby")] public RivetLobby Lobby;
+    [JsonProperty("ports")] public Dictionary<string, RivetLobbyPort> Ports;
+    [JsonProperty("player")] public RivetPlayer Player;
 }
 
-[Serializable]
 public struct RivetLobby
 {
-    [JsonProperty("lobby_id")] public string LobbyId { get; set; }
-    [JsonProperty("host")] public string Host { get; set; }
-    [JsonProperty("port")] public int Port { get; set; }
+    [JsonProperty("lobby_id")] public string LobbyId;
+    [JsonProperty("host")] public string Host;
+    [JsonProperty("port")] public int Port;
 }
 
-[Serializable]
 public struct RivetLobbyPort
 {
-    [JsonProperty("hostname")] public string? Hostname { get; set; }
-    [JsonProperty("port")] public ushort Port { get; set; }
-    [JsonProperty("is_tls")] public bool IsTls { get; set; }
+    [JsonProperty("hostname")] public string? Hostname;
+    [JsonProperty("port")] public ushort Port;
+    [JsonProperty("is_tls")] public bool IsTls;
 }
 
 public struct RivetPlayer
 {
-    [JsonProperty("token")] public string Token { get; set; }
+    [JsonProperty("token")] public string Token;
 }
 
 public class RivetManager : MonoBehaviour
@@ -89,12 +84,8 @@ public class RivetManager : MonoBehaviour
     private string? _lobbyConfigRaw = null;
     
     // Parse LobbyConfigRaw to JObject
-    public JObject? LobbyConfig
-    {
-        get => _lobbyConfigRaw != null ? JObject.Parse(_lobbyConfigRaw) : null;
-        set => _lobbyConfigRaw = value?.ToString();
-    }
-    
+    public JObject? LobbyConfig => _lobbyConfigRaw != null ? JObject.Parse(_lobbyConfigRaw) : null;
+
     #region References
 
     private NetworkManager _networkManager = null!;
@@ -340,8 +331,9 @@ public class RivetManager : MonoBehaviour
     private IEnumerator PostRequest<TReq, TRes>(string url, TReq requestBody, Action<TRes> success, Action<string> fail)
     {
         var debugRequestDescription = "POST " + url;
-        
-        var requestBodyStr = JsonConvert.SerializeObject(requestBody);
+
+        var requestBodyStr = JsonConvert.SerializeObject(requestBody,
+            new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
         Debug.Log(debugRequestDescription + " Request: " + requestBodyStr + "\n" + Environment.StackTrace);
 
         var www = UnityWebRequest.Post(url, requestBodyStr, "application/json");
