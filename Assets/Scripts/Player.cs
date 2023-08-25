@@ -6,12 +6,13 @@ using FishNet.Object;
 
 public class Player : NetworkBehaviour
 {
-    public float speed = 5.0f;
     private CharacterController _cc;
+    // private LobbyConfig _lc;
 
-    void Awake()
+    void Start()
     {
         _cc = GetComponent<CharacterController>();
+        // _lc = GameObject.Find("GameManager").GetComponent<LobbyConfig>();
     }
 
     void Update()
@@ -23,7 +24,7 @@ public class Player : NetworkBehaviour
     void Move() {
         var horizontalInput = Input.GetAxisRaw("Horizontal");
         var verticalInput = Input.GetAxisRaw("Vertical");
-        var offset = new Vector3(horizontalInput, Physics.gravity.y, verticalInput) * speed * Time.deltaTime;
+        var offset = new Vector3(horizontalInput, Physics.gravity.y, verticalInput) * 5.0f * Time.deltaTime;
         _cc.Move(offset);
     }
 }

@@ -1,3 +1,4 @@
+#nullable enable
 using FishNet.Managing;
 using FishNet.Transporting;
 using Newtonsoft.Json.Linq;
@@ -8,13 +9,14 @@ using UnityEngine.UI;
 
 public class RivetUI : MonoBehaviour
 {
-    private NetworkManager _networkManager;
-    private RivetManager _rivetManager;
+    private NetworkManager _networkManager = null!;
+    private RivetManager _rivetManager = null!;
+    public LobbyConfig? lobbyConfig;
 
-    public GameObject joinMenuPanel;
-    public TMP_Text connectionInfoText;
-    public TMP_InputField lobbyIdInputField;
-    public Slider gravitySlider;
+    public GameObject joinMenuPanel = null!;
+    public TMP_Text connectionInfoText = null!;
+    public TMP_InputField lobbyIdInputField = null!;
+    public Slider gravitySlider = null!;
 
     private LocalConnectionState? _connectionState;
 
@@ -24,6 +26,8 @@ public class RivetUI : MonoBehaviour
         _rivetManager = FindObjectOfType<RivetManager>();
 
         _networkManager.ClientManager.OnClientConnectionState += ClientManager_OnClientConnectionState;
+        _networkManager.ClientManager.OnAuthenticated += UpdateConnectionInfo;
+        _networkManager.ClientManager.OnRemoteConnectionState += (_) => UpdateConnectionInfo();
 
         UpdateConnectionInfo();
     }
@@ -41,7 +45,7 @@ public class RivetUI : MonoBehaviour
 
     #region UI events
 
-    public void OnClick_Find()
+    public void OnClick_Find(string gameMode)
     {
         // Hide menu
         joinMenuPanel.SetActive(false);
@@ -49,7 +53,7 @@ public class RivetUI : MonoBehaviour
         // Find lobby
         StartCoroutine(_rivetManager.FindLobby(new FindLobbyRequest
         {
-            GameModes = new[] { "default" },
+            GameModes = new[] { gameMode },
         }, _ => UpdateConnectionInfo(), fail => { Debug.Log($"Failed to find lobby: {fail}"); }));
     }
     
@@ -90,7 +94,7 @@ public class RivetUI : MonoBehaviour
 
     #region UI
 
-    private void UpdateConnectionInfo()
+    public void UpdateConnectionInfo()
     {
         // Choose connection state text
         string connectionState;
@@ -119,8 +123,9 @@ public class RivetUI : MonoBehaviour
             $"Lobby ID: {(flr.HasValue ? flr.Value.Lobby.LobbyId : "?")}\n" +
             $"Host: {(flr.HasValue ? flr.Value.Ports["default"].Hostname : "?")}\n" +
             $"Port: {(flr.HasValue ? flr.Value.Ports["default"].Port : "?")}\n" +
-            $"Lobby config: {_rivetManager.lobbyConfigRaw ?? "?"}\n" +
-            $"Connection state: {connectionState}\n";
+            $"Connection state: {connectionState}\n\n" +
+            $"Game mode: {(lobbyConfig != null ? lobbyConfig.gameMode.ToString() : "?")}\n" +
+            $"Move speed: {(lobbyConfig != null ? lobbyConfig.moveSpeed.ToString() : "?")}\n";
     }
 
     #endregion

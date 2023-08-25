@@ -4,15 +4,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using FishNet.Managing;
-using FishNet.Object;
-using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
 using UnityEngine;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
-using UnityEngine.Serialization;
 
 [JsonConverter(typeof(StringEnumConverter))]
 public enum CreateLobbyRequestPublicity
@@ -74,21 +71,28 @@ public struct RivetPlayer
 
 public class RivetManager : MonoBehaviour
 {
-    const string MatchmakerApiEndpoint = "https://matchmaker.api.rivet.gg/v1";
-    // const string MatchmakerApiEndpoint = "https://matchmaker.api.staging.gameinc.io/v1";
+    // const string MatchmakerApiEndpoint = "https://matchmaker.api.rivet.gg/v1";
+    const string MatchmakerApiEndpoint = "https://matchmaker.api.staging.gameinc.io/v1";
     
     public string? rivetToken = null;
     
     /// <summary>
+    /// The game mode to start the game with.
+    ///
+    /// Only available on the server.
+    /// </summary>
+    [HideInInspector] public string? gameModeName = null;
+    
+    /// <summary>
     /// The lobby config provided for a custom lobby.
     /// </summary>
-    [HideInInspector] public string? lobbyConfigRaw = null;
+    private string? _lobbyConfigRaw = null;
     
     // Parse LobbyConfigRaw to JObject
     public JObject? LobbyConfig
     {
-        get => lobbyConfigRaw != null ? JObject.Parse(lobbyConfigRaw) : null;
-        set => lobbyConfigRaw = value?.ToString();
+        get => _lobbyConfigRaw != null ? JObject.Parse(_lobbyConfigRaw) : null;
+        set => _lobbyConfigRaw = value?.ToString();
     }
     
     #region References
@@ -126,8 +130,9 @@ public class RivetManager : MonoBehaviour
     {
         Debug.Log("Starting server on port " + GetServerPort());
         
-        // Read RIVET_LOBBY_CONFIG JSON to LobbyConfig
-        lobbyConfigRaw = Environment.GetEnvironmentVariable("RIVET_LOBBY_CONFIG");
+        // Read environment variables
+        gameModeName = Environment.GetEnvironmentVariable("RIVET_GAME_MODE_NAME");
+        _lobbyConfigRaw = Environment.GetEnvironmentVariable("RIVET_LOBBY_CONFIG");
         
         // Start server
         _networkManager.TransportManager.Transport.SetServerBindAddress("0.0.0.0", IPAddressType.IPv4);
@@ -193,7 +198,7 @@ public class RivetManager : MonoBehaviour
     public IEnumerator FindLobby(FindLobbyRequest request, Action<FindLobbyResponse> success,
         Action<string> fail)
     {
-        yield return PostRequest<FindLobbyRequest, FindLobbyResponse>("https://matchmaker.api.rivet.gg/v1/lobbies/find",
+        yield return PostRequest<FindLobbyRequest, FindLobbyResponse>(MatchmakerApiEndpoint + "/lobbies/find",
             request, res =>
             {
                 // Save response
@@ -219,7 +224,7 @@ public class RivetManager : MonoBehaviour
     public IEnumerator JoinLobby(JoinLobbyRequest request, Action<FindLobbyResponse> success,
         Action<string> fail)
     {
-        yield return PostRequest<JoinLobbyRequest, FindLobbyResponse>("https://matchmaker.api.rivet.gg/v1/lobbies/join",
+        yield return PostRequest<JoinLobbyRequest, FindLobbyResponse>(MatchmakerApiEndpoint + "/lobbies/join",
             request, res =>
             {
                 // Save response
@@ -245,7 +250,7 @@ public class RivetManager : MonoBehaviour
     public IEnumerator CreateLobby(CreateLobbyRequest request, Action<FindLobbyResponse> success,
         Action<string> fail)
     {
-        yield return PostRequest<CreateLobbyRequest, FindLobbyResponse>("https://matchmaker.api.rivet.gg/v1/lobbies/create",
+        yield return PostRequest<CreateLobbyRequest, FindLobbyResponse>(MatchmakerApiEndpoint + "/lobbies/create",
             request, res =>
             {
                 // Save response
@@ -269,7 +274,7 @@ public class RivetManager : MonoBehaviour
     /// <returns></returns>
     public IEnumerator LobbyReady(Action success, Action<string> fail)
     {
-        yield return PostRequest<Dictionary<string, string>, object>("https://matchmaker.api.rivet.gg/v1/lobbies/ready",
+        yield return PostRequest<Dictionary<string, string>, object>(MatchmakerApiEndpoint + "/lobbies/ready",
             new Dictionary<string, string>(), (_) => success(), fail);
     }
 
@@ -288,7 +293,7 @@ public class RivetManager : MonoBehaviour
     public IEnumerator PlayerConnected(string playerToken, Action success, Action<string> fail)
     {
         yield return PostRequest<Dictionary<string, string>, object>(
-            "https://matchmaker.api.rivet.gg/v1/players/connected",
+            MatchmakerApiEndpoint + "/players/connected",
             new Dictionary<string, string>
             {
                 { "player_token", playerToken },
@@ -306,7 +311,7 @@ public class RivetManager : MonoBehaviour
     public IEnumerator PlayerDisconnected(string playerToken, Action success, Action<string> fail)
     {
         yield return PostRequest<Dictionary<string, string>, object>(
-            "https://matchmaker.api.rivet.gg/v1/players/disconnected", new Dictionary<string, string>
+            MatchmakerApiEndpoint + "/players/disconnected", new Dictionary<string, string>
             {
                 { "player_token", playerToken },
             }, (_) => success(), fail);
