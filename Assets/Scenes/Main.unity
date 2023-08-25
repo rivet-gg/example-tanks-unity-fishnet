@@ -699,7 +699,7 @@ GameObject:
   - component: {fileID: 561572010}
   - component: {fileID: 561572009}
   m_Layer: 5
-  m_Name: Gravity Slider
+  m_Name: Slider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -749,10 +749,10 @@ MonoBehaviour:
   m_FillRect: {fileID: 588312629}
   m_HandleRect: {fileID: 1976308676}
   m_Direction: 0
-  m_MinValue: 0
-  m_MaxValue: 2
+  m_MinValue: 0.01
+  m_MaxValue: 20
   m_WholeNumbers: 0
-  m_Value: 1
+  m_Value: 5
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -1935,7 +1935,7 @@ MonoBehaviour:
   joinMenuPanel: {fileID: 1158605788}
   connectionInfoText: {fileID: 637163847}
   lobbyIdInputField: {fileID: 760137478}
-  gravitySlider: {fileID: 561572009}
+  moveSpeedSlider: {fileID: 561572009}
 --- !u!114 &1081577578
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4399,11 +4399,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3077960475918568956, guid: a8b0d289d32abce43b08e49b65f92b55, type: 3}
       propertyPath: m_Name
-      value: Gravity
+      value: Move Speed
       objectReference: {fileID: 0}
     - target: {fileID: 4694859443562295531, guid: a8b0d289d32abce43b08e49b65f92b55, type: 3}
       propertyPath: m_text
-      value: Gravity
+      value: Move Speed
       objectReference: {fileID: 0}
     - target: {fileID: 8346680025563296582, guid: a8b0d289d32abce43b08e49b65f92b55, type: 3}
       propertyPath: m_Pivot.x
