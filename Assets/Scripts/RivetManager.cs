@@ -21,18 +21,20 @@ public enum CreateLobbyRequestPublicity
     [EnumMember(Value = "private")] Private,
 }
 
+[Serializable]
 public struct FindLobbyRequest
 {
     [JsonProperty("game_modes")] public string[] GameModes { get; set; }
     [JsonProperty("regions")] public string[]? Regions { get; set; }
 }
 
-
+[Serializable]
 public struct JoinLobbyRequest
 {
     [JsonProperty("lobby_id")] public string LobbyId { get; set; }
 }
 
+[Serializable]
 public struct CreateLobbyRequest
 {
     [JsonProperty("game_mode")] public string GameMode { get; set; }
@@ -41,6 +43,7 @@ public struct CreateLobbyRequest
     [JsonProperty("lobby_config")] public JObject? LobbyConfig { get; set; }
 }
 
+[Serializable]
 public struct FindLobbyResponse
 {
     [JsonProperty("lobby")] public RivetLobby Lobby { get; set; }
@@ -48,6 +51,7 @@ public struct FindLobbyResponse
     [JsonProperty("player")] public RivetPlayer Player { get; set; }
 }
 
+[Serializable]
 public struct RivetLobby
 {
     [JsonProperty("lobby_id")] public string LobbyId { get; set; }
@@ -55,6 +59,7 @@ public struct RivetLobby
     [JsonProperty("port")] public int Port { get; set; }
 }
 
+[Serializable]
 public struct RivetLobbyPort
 {
     [JsonProperty("hostname")] public string? Hostname { get; set; }
@@ -69,8 +74,10 @@ public struct RivetPlayer
 
 public class RivetManager : MonoBehaviour
 {
-    public string? rivetToken = null;
+    const string MatchmakerApiEndpoint = "https://matchmaker.api.rivet.gg/v1";
+    // const string MatchmakerApiEndpoint = "https://matchmaker.api.staging.gameinc.io/v1";
     
+    public string? rivetToken = null;
     
     /// <summary>
     /// The lobby config provided for a custom lobby.

@@ -338,7 +338,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 76.37085, y: -21.664093}
+  m_AnchoredPosition: {x: 76.37085, y: -21.664062}
   m_SizeDelta: {x: 113.74182, y: 23.328201}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &177192200
@@ -384,7 +384,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 177192201}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1081577577}
+        m_TargetAssemblyTypeName: RivetUI, Assembly-CSharp
+        m_MethodName: OnClick_CopyLobbyId
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &177192201
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1951,7 +1963,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3781f297e673b0940943fedd28d18ef2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rivetToken: dev_staging.eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.CNf63tWVMhDXopqYoDEaEgoQ7tfsA-QZSU6u97JMZ-zTdCIvQi0KEgoQmfId86_FTHuxaP1VTZQ1rhoJMTI3LjAuMC4xIgwKB2RlZmF1bHQQ4Tw.hsHzAtAVLpOWm4BQ4Pmtt9aejMdudL2KWd9Cq66_TbPCF5Mb979Y7mnlPJ37Ssh4oJT7PUkwA0tkDYXiTDv8DQ
+  rivetToken: dev_staging.eyJ0eXAiOiJKV1QiLCJhbGciOiJFZERTQSJ9.CMfCq_KXMhDH6ua0ojEaEgoQ25gXtDVbR5OtdCs2d2ZA2yIxQi8KEgoQmfId86_FTHuxaP1VTZQ1rhoJMTI3LjAuMC4xIg4KB2RlZmF1bHQQ2jwYAg.Tp_C6zeRuHJtLrN8GBff6q5jAsJ4R1chX_1HblU73SzNX0iFgzsnOFs9FJlZrv86-Y7jWdIik5zztEqljEuCCg
   lobbyConfigRaw: 
 --- !u!1 &1265876793
 GameObject:
