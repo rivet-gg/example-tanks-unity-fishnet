@@ -1,5 +1,7 @@
 # Rivet + Unity + FishNet Example
 
+**This repo has moved [here](https://github.com/rivet-gg/examples)!**
+
 This is a **work in progress** example of how to use Rivet with Unity and FishNet.
 
 This is configured to use UDP sockets with the [Tugboat](https://fish-networking.gitbook.io/docs/manual/components/transports/tugboat) transport. WebGL requires the [Bayou](https://fish-networking.gitbook.io/docs/manual/components/transports/bayou) transport, which is not included in this demo yet.
